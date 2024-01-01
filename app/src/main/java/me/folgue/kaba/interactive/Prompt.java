@@ -33,6 +33,12 @@ public class Prompt {
         this.storageType = storageType;
     }
 
+    public Prompt(StorageType storageType, String address) throws StorageException {
+        this.storage = StorageFactory.getStorage(address, storageType);
+        this.board = storage.getBoard();
+        this.storageType = storageType;
+    }
+
     /**
      * Checks if a board and a storage was loaded.
      * @return {@code true} if both of them were loaded, {@code false} if one 

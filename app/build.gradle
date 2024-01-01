@@ -26,6 +26,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.scala-lang/jline
     implementation 'org.jline:jline:3.20.0'
+
+    // https://mvnrepository.com/artifact/commons-cli/commons-cli
+    implementation 'commons-cli:commons-cli:1.6.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
