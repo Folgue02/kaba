@@ -6,5 +6,14 @@ package me.folgue.kaba.elements;
 public enum TaskState {
     Todo,
     InProgress,
-    Done
+    Done;
+
+    public static TaskState ofString(String rawState) {
+        return switch (rawState.toLowerCase()) {
+            case "todo" -> TaskState.Todo;
+            case "inprogress" -> TaskState.InProgress;
+            case "done" -> TaskState.Done;
+            default -> null;
+        };
+    }
 }

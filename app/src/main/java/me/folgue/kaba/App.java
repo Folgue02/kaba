@@ -5,13 +5,12 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 
 public class App {
+    public static final String VERSION = "0.0.2";
     private static boolean GRACEFUL_SHUTDOWN = false;
     public static void main(String[] args) throws Exception {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             if (!GRACEFUL_SHUTDOWN)
                 System.out.println("\nClosing kaba like this might leave corrupted boards.\n");
-            else
-                System.out.println("Goodbye!");
         }));
 
         StartupConfiguration startConfig;
@@ -24,6 +23,13 @@ public class App {
             return;
         } catch (StartupConfiguration.HelpArgument e) {
             GRACEFUL_SHUTDOWN = true;
+            System.exit(0);
+            return;
+        } catch (StartupConfiguration.VersionArgument e) {
+            GRACEFUL_SHUTDOWN = true;
+            System.out.printf("Kaba version v%s\n", App.VERSION);
+            System.out.printf("Running on %s version %s\n", System.getProperty("os.name"), System.getProperty("os.version"));
+            System.out.printf("JVM version %s\n", System.getProperty("java.runtime.version"));
             System.exit(0);
             return;
         }

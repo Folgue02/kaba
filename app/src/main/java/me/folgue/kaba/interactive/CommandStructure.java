@@ -52,12 +52,12 @@ public class CommandStructure {
 	
 	@Override
 	public boolean equals(Object other) {
-		if (other == this)
-			return true;
-		
+        if (other == this)
+            return true;
+
 		if (other instanceof CommandStructure cmdStruct) {
-			return cmdStruct.command.equals(this.command) 
-					&& cmdStruct.arguments.equals(this.arguments);
+		    return cmdStruct.command.equals(this.command) 
+		        && cmdStruct.arguments.equals(this.arguments);
 		} else {
 			return false;
 		}

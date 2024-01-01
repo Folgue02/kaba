@@ -13,34 +13,35 @@ import org.apache.commons.cli.ParseException;
 
 public class StartupConfiguration {
     static class HelpArgument extends Exception {}
+    static class VersionArgument extends Exception {}
 
     public String address;
     public StorageType type;
 
-    public StartupConfiguration(String[] args) throws ParseException, StartupConfiguration.HelpArgument {
+    public StartupConfiguration(String[] args) throws ParseException, StartupConfiguration.HelpArgument, StartupConfiguration.VersionArgument {
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
         Option[] optionParameters = {
-            new Option("a", "address", true, "Address to the storage"),
-            new Option("t", "storage-type", true, "Type of storage to use."),
-            new Option("h", "help", false, "Displays a help message.")
-            /*Option.builder()
-                .argName("a")
-                .longOpt("address")
-                .desc("Address to the storage.")
-                .build(),
-            Option.builder()
-                .argName("t")
-                .longOpt("storage-type")
-                .desc("Type of storage to use.")
-                .type(StorageType.class)
-                .build(),
-            Option.builder()
-                .argName("h")
-                .hasArg(false)
-                .longOpt("help")
-                .desc("Displays a help mesage.")
-                .build()*/
+            new Option(
+                    "a",
+                    "address",
+                    true, 
+                    "Address to the storage"),
+            new Option(
+                    "t", 
+                    "storage-type", 
+                    true, 
+                    "Type of storage to use."),
+            new Option(
+                    "h", 
+                    "help", 
+                    false, 
+                    "Displays a help message."),
+            new Option(
+                    "v",
+                    "version",
+                    false,
+                    "Displays the version of kaba.")
         };
 
         Arrays.stream(optionParameters)
@@ -52,6 +53,8 @@ public class StartupConfiguration {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp("kaba", options);
             throw new StartupConfiguration.HelpArgument();
+        } else if (parsedArgs.hasOption('v')) {
+            throw new VersionArgument();
         }
 
         this.address = parsedArgs.getOptionValue('a');

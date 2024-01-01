@@ -25,6 +25,6 @@ public class Task implements Comparable<Task> {
 
     @Override
     public String toString() {
-        return String.format("\n\tID: %d\n\tName: %s\n\tDescription: %s", this.id, this.name, this.description);
+        return String.format("\n\tID: %d\n\tName: %s\n\tDescription: %s, \n\tState: %s", this.id, this.name, this.description, this.state);
     }
 }

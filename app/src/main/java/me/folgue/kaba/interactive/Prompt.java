@@ -60,7 +60,7 @@ public class Prompt {
             } else {
                 storageName = "DISCONNECTED";
             }
-            String prompt = String.format("(%s)%s>>>", this.storageType, storageName);
+            String prompt = String.format("(%s)%s>>> ", this.storageType, storageName);
             CommandStructure cmdStruct;
             try {
                 String userInput = reader.readLine(prompt);
@@ -140,15 +140,26 @@ public class Prompt {
             case "rmtask" -> {
                 if (!this.isLoaded()) {
                     System.err.println("No storage was loaded.");
+                } else if (cmdStruct.arguments.isEmpty()) {
+                    System.err.println("You didn't specify the identifier of the task.");
+                } else if (this.removeTask(cmdStruct.arguments.get(0))) {
+                    System.out.println("Task removed.");
                 } else {
-                    if (cmdStruct.arguments.isEmpty())
-                        System.err.println("You didn't specify the identifier of the task.");
-                    else {
-                        if (this.removeTask(cmdStruct.arguments.get(0))) {
-                            System.out.println("Task removed.");
-                        } else {
-                            System.out.println("Task not removed (it either didn't exist, or the specified ID wasn't a number.");
-                        }
+                    System.out.println("Task not removed (it either didn't exist, or the specified ID wasn't a number).");
+                }
+            }
+            case "setstate" -> {
+                if (!this.isLoaded()) {
+                    System.err.println("No storage was loaded.");
+                } else if (cmdStruct.arguments.size() < 2) {
+                    System.err.println("You didn't specify the identifier and/or the new state for the task.");
+                } else {
+                    try {
+                        boolean success = this.setState(cmdStruct.arguments.get(0), cmdStruct.arguments.get(1));
+                        if (!success)
+                            System.err.println("The state of the given task wasn't changed (maybe the task didn't exist?).");
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Either the identifier wasn't an integer, the new state for the task was invalid or both.");
                     }
                 }
             }
@@ -157,6 +168,9 @@ public class Prompt {
                     System.out.println("There is a storage still loaded. Unload ('unload') it before quitting to avoid corruption.");
                 else
                     inMenu = false;
+            }
+            default -> {
+                System.err.printf("Command '%s' is not recognized.\n", cmdStruct.command);
             }
             }
         }
@@ -223,6 +237,16 @@ public class Prompt {
      */
     private void createNewTask(String name, String description) {
         this.board.createNewTask(name, description, TaskState.Todo);
+    }
+
+    private boolean setState(String identifier, String newStateString) throws IllegalArgumentException, NumberFormatException {
+        int targetId = Integer.parseInt(identifier);
+        TaskState newState = TaskState.ofString(newStateString);
+
+        if (newState == null)
+            throw new IllegalArgumentException("The provided state doesn't correspond to any of the possible states of a task.");
+
+        return this.board.setTaskState(targetId, newState);
     }
 
     /**

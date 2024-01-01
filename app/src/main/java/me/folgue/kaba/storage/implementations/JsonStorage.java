@@ -19,9 +19,10 @@ public class JsonStorage implements IStorage {
 	private String filename;
 
 	public JsonStorage(String filename) {
-		this.filename = filename;
+		this.filename = filename.replaceFirst("^~", System.getProperty("user.home"));
 	}
 
+    @Override
     public StorageType getType() {
         return StorageType.Json;
     }
