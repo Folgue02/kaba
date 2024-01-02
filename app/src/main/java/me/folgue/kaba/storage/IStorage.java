@@ -36,6 +36,12 @@ public interface IStorage {
     StorageType getType();
 
     /**
+     * Returns the address used by the storage.
+     * @return Address used by the storage.
+     */
+    String getAddress();
+
+    /**
      * Method to be called before removing the storage. A {@link Board} is passed
      * with the intention to be saved before closing.
      * @param board The modified board.

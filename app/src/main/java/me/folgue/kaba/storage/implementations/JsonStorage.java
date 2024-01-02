@@ -61,4 +61,9 @@ public class JsonStorage implements IStorage {
     public String getStorageName() {
         return String.format("JSON:%s", this.filename);
     }
+
+    @Override
+    public String getAddress() {
+        return this.filename;
+    }
 }

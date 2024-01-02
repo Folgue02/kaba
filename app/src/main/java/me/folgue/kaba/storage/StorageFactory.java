@@ -10,6 +10,8 @@ import me.folgue.kaba.storage.exceptions.IOStorageException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
+import me.folgue.kaba.utils.LineReaderSingleton;
+import org.jline.reader.LineReader;
 
 /**
  * 
@@ -49,14 +51,15 @@ public abstract class StorageFactory {
      * @throws IOStorageException 
      */
     private static void jsonCreationWizard(String address) throws IOStorageException {
-        Scanner sc = new Scanner(System.in);
+        LineReader sc = LineReaderSingleton.getInstance();
 
-        System.out.print("What will be the ID string of the new board? ");
-        String identifier = sc.nextLine();
+        String identifier = sc.readLine("What will be the ID string of the new board? ");
+        IStorage jsonStorage = getStorage(address, StorageType.Json);
+
         Board board = new Board(identifier);
         String jsonContent = new Gson().toJson(board);
 
-        try(FileWriter fw = new FileWriter(address)) {
+        try(FileWriter fw = new FileWriter(jsonStorage.getAddress())) {
             fw.write(jsonContent);
         } catch (IOException e) {
             throw new IOStorageException(e);
