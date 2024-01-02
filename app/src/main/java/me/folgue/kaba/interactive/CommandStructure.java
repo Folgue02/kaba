@@ -47,7 +47,9 @@ public class CommandStructure {
             }
 		}
 		
-		return parsed;
+		return parsed.stream()
+                .filter(s -> !s.isEmpty())
+                .toList();
 	}
 	
 	@Override
