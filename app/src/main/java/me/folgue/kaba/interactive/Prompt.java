@@ -8,6 +8,7 @@ import me.folgue.kaba.elements.Board;
 import me.folgue.kaba.elements.Task;
 import me.folgue.kaba.storage.StorageFactory;
 import me.folgue.kaba.storage.exceptions.StorageException;
+import me.folgue.kaba.tui.BoxGraphic;
 import me.folgue.kaba.utils.LineReaderSingleton;
 import org.jline.reader.LineReader;
 
@@ -62,118 +63,133 @@ public class Prompt {
             }
             String prompt = String.format("(%s)%s>>> ", this.storageType, storageName);
             CommandStructure cmdStruct;
-            try {
-                String userInput = reader.readLine(prompt);
-                reader.getHistory().add(userInput);
-                cmdStruct = new CommandStructure(userInput);
-            } catch (IllegalArgumentException e) {
-                // Empty command
-                continue;
-            }
-
-            switch (cmdStruct.command) {
-            case "load" ->  {
-                if (this.isLoaded()) {
-                    System.err.println("An storage is currently loaded (close with 'unload')");
-                } else {
-                    try {
-                        this.load(cmdStruct.arguments.get(0));
-                    } catch (StorageException e) {
-                        e.printStackTrace(System.err);
-                        System.err.println("The storage couldn't be loaded due to the previous error, it might not have been fully loaded.");
-                    }
+            String userInput = reader.readLine(prompt);
+            reader.getHistory().add(userInput);
+            for (String commandSegment : userInput.split(";")) {
+                try {
+                    cmdStruct = new CommandStructure(commandSegment);
+                } catch (IllegalArgumentException e) {
+                    // Empty command
+                    continue;
                 }
-            }
-            case "unload" -> {
-                if (this.isLoaded()) {
-                    try {
-                        this.unload();
-                    } catch (StorageException e) {
-                        System.err.println("An error occurred while unloading the storage (" + e.getMessage() + "), the storage might not have been unloaded properly.");
-                    }
-                } else {
-                    System.err.println("No storage was loaded.");
-                }
-            }
-            case "save", "write" -> {
-                if (this.isLoaded()) {
-                    try {
-                        this.storage.writeBoard(this.board);
-                        System.out.println("The board has been saved.");
-                    } catch (StorageException e) {
-                        System.err.println("There was an error while saving the board to the storage. The board might not have been saved or the storage might be corrupted.");
-                    }
-                } else {
-                    System.err.println("No storage was loaded.");
-                }
-            }
-            case "list" -> {
-                if (!this.isLoaded()) {
-                    System.err.println("No storage was loaded.");
-                } else {
-                    this.displayTasks();
-                }
-            }
-            case "create" -> {
-                if (cmdStruct.arguments.isEmpty()) {
-                    System.err.println("You didn't specify the address of the new storage.");
-                } else {
-                    try {
-                        System.out.printf("Creating a storage with address '%s' of type '%s'\n", cmdStruct.arguments.get(0), this.storageType);
-                        StorageFactory.creationWizard(cmdStruct.arguments.get(0), this.storageType);
-                    } catch (StorageException e) {
-                        System.err.println("An error occurred while creating the storage with the specified address: " + e);
-                    }
-                }
-            }
-            case "newtask" -> {
-                if (!this.isLoaded()) {
-                    System.err.println("No storage was loaded.");
-                } else {
-                    if (cmdStruct.arguments.size() >= 2) {
-                        this.createNewTask(cmdStruct.arguments.get(0), cmdStruct.arguments.get(1));
-                    } else {
-                        this.createNewTask();
-                    }
-                }
-            }
-            case "rmtask" -> {
-                if (!this.isLoaded()) {
-                    System.err.println("No storage was loaded.");
-                } else if (cmdStruct.arguments.isEmpty()) {
-                    System.err.println("You didn't specify the identifier of the task.");
-                } else if (this.removeTask(cmdStruct.arguments.get(0))) {
-                    System.out.println("Task removed.");
-                } else {
-                    System.out.println("Task not removed (it either didn't exist, or the specified ID wasn't a number).");
-                }
-            }
-            case "setstate" -> {
-                if (!this.isLoaded()) {
-                    System.err.println("No storage was loaded.");
-                } else if (cmdStruct.arguments.size() < 2) {
-                    System.err.println("You didn't specify the identifier and/or the new state for the task.");
-                } else {
-                    try {
-                        boolean success = this.setState(cmdStruct.arguments.get(0), cmdStruct.arguments.get(1));
-                        if (!success)
-                            System.err.println("The state of the given task wasn't changed (maybe the task didn't exist?).");
-                    } catch (IllegalArgumentException e) {
-                        System.err.println("Either the identifier wasn't an integer, the new state for the task was invalid or both.");
-                    }
-                }
-            }
-            case "quit" -> {
-                if (this.isLoaded())
-                    System.out.println("There is a storage still loaded. Unload ('unload') it before quitting to avoid corruption.");
-                else
+                if (!this.executeCommand(cmdStruct))
                     inMenu = false;
             }
-            default -> {
-                System.err.printf("Command '%s' is not recognized.\n", cmdStruct.command);
-            }
+
+        }
+    }
+
+    /**
+     * Executes a command given.
+     * @param cmdStruct Command to be executed.
+     * @return {@code true} if the command doesn't communicate that wants to terminate
+     * the execution, {@code false} if the command does.
+     */
+    public boolean executeCommand(CommandStructure cmdStruct) {
+        switch (cmdStruct.command) {
+        case "load" ->  {
+            if (this.isLoaded()) {
+                System.err.println("An storage is currently loaded (close with 'unload')");
+            } else {
+                try {
+                    this.load(cmdStruct.arguments.get(0));
+                } catch (StorageException e) {
+                    e.printStackTrace(System.err);
+                    System.err.println("The storage couldn't be loaded due to the previous error, it might not have been fully loaded.");
+                }
             }
         }
+        case "unload" -> {
+            if (this.isLoaded()) {
+                try {
+                    this.unload();
+                } catch (StorageException e) {
+                    System.err.println("An error occurred while unloading the storage (" + e.getMessage() + "), the storage might not have been unloaded properly.");
+                }
+            } else {
+                System.err.println("No storage was loaded.");
+            }
+        }
+        case "save", "write" -> {
+            if (this.isLoaded()) {
+                try {
+                    this.storage.writeBoard(this.board);
+                    System.out.println("The board has been saved.");
+                } catch (StorageException e) {
+                    System.err.println("There was an error while saving the board to the storage. The board might not have been saved or the storage might be corrupted.");
+                }
+            } else {
+                System.err.println("No storage was loaded.");
+            }
+        }
+        case "list" -> {
+            if (!this.isLoaded()) {
+                System.err.println("No storage was loaded.");
+            } else {
+                this.displayTasks();
+            }
+        }
+        case "create" -> {
+            if (cmdStruct.arguments.isEmpty()) {
+                System.err.println("You didn't specify the address of the new storage.");
+            } else {
+                try {
+                    System.out.printf("Creating a storage with address '%s' of type '%s'\n", cmdStruct.arguments.get(0), this.storageType);
+                    StorageFactory.creationWizard(cmdStruct.arguments.get(0), this.storageType);
+                } catch (StorageException e) {
+                    System.err.println("An error occurred while creating the storage with the specified address: " + e);
+                }
+            }
+        }
+        case "newtask" -> {
+            if (!this.isLoaded()) {
+                System.err.println("No storage was loaded.");
+            } else {
+                if (cmdStruct.arguments.size() >= 2) {
+                    this.createNewTask(cmdStruct.arguments.get(0), cmdStruct.arguments.get(1));
+                } else {
+                    this.createNewTask();
+                }
+            }
+        }
+        case "rmtask" -> {
+            if (!this.isLoaded()) {
+                System.err.println("No storage was loaded.");
+            } else if (cmdStruct.arguments.isEmpty()) {
+                System.err.println("You didn't specify the identifier of the task.");
+            } else if (this.removeTask(cmdStruct.arguments.get(0))) {
+                System.out.println("Task removed.");
+            } else {
+                System.out.println("Task not removed (it either didn't exist, or the specified ID wasn't a number).");
+            }
+        }
+        case "setstate" -> {
+            if (!this.isLoaded()) {
+                System.err.println("No storage was loaded.");
+            } else if (cmdStruct.arguments.size() < 2) {
+                System.err.println("You didn't specify the identifier and/or the new state for the task.");
+            } else {
+                try {
+                    boolean success = this.setState(cmdStruct.arguments.get(0), cmdStruct.arguments.get(1));
+                    if (!success)
+                        System.err.println("The state of the given task wasn't changed (maybe the task didn't exist?).");
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Either the identifier wasn't an integer, the new state for the task was invalid or both.");
+                }
+            }
+        }
+        case "quit" -> {
+            if (this.isLoaded())
+                System.out.println("There is a storage still loaded. Unload ('unload') it before quitting to avoid corruption.");
+            else
+                return false;
+        }
+        default -> {
+            System.err.printf("Command '%s' is not recognized.\n", cmdStruct.command);
+        }
+        }
+
+        return true;
     }
 
     /**
@@ -206,13 +222,14 @@ public class Prompt {
      * </i>).
      */
     public void displayTasks() {
+        BoxGraphic boxGraphic = new BoxGraphic(5, 100);
         if (this.board.tasks.isEmpty()) {
             System.out.println("The board is empty.");
-        }
-
-        for (Task task : this.board.tasks) {
+        } else {
             System.out.println();
-            System.out.println(task);
+            for (Task task : this.board.tasks) {
+                System.out.println(boxGraphic.formatBox(task.toString()));
+            }
         }
     }
 
